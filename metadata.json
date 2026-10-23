@@ -1,0 +1,6 @@
+{
+  "name": "Apprendre à lire les notes - Solfège & MIDI",
+  "description": "Application d'apprentissage de la lecture des notes de musique sur portée avec support clavier virtuel et MIDI (Casio, Yamaha, Roland, etc.) compatible MIDIWeb sur iOS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Apprendre à lire les notes — Solfège & MIDI</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --panel-2: #f1f5f9;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --good: #16a34a;
+      --bad: #dc2626;
+      --staff: #1e293b;
+      --midi: #9333ea;
+      --midi-bg: #f3e8ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 12px 12px 24px;
+      overscroll-behavior: none;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #0284c7, #6366f1);
+      color: #ffffff;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    .subtitle {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Auto MIDI Status Indicator */
+    .midi-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1e293b;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .midi-status-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--good);
+      box-shadow: 0 0 6px rgba(22, 163, 74, 0.6);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+      margin-bottom: 12px;
+    }
+
+    /* Controls Grid */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+    }
+
+    select, .seg {
+      background: var(--panel-2);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .seg {
+      display: flex;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .seg button {
+      flex: 1;
+      background: transparent;
+      color: var(--muted);
+      border: 0;
+      border-radius: 7px;
+      padding: 6px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+
+    .seg button.on {
+      background: #ffffff;
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .btn {
+      background: var(--panel-2);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 750;
+      transition: all 0.15s;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+    }
+
+    .btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Staff Stage */
+    .stage {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Scoreboard */
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .stat-box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--panel-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .stat-val {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .stat-lbl {
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Feedback */
+    .feedback {
+      min-height: 38px;
+      margin: 4px 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .feedback-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .feedback-pill.good {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+
+    .feedback-pill.bad {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+
+    .feedback-pill.info {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #7dd3fc;
+    }
+
+    /* Keyboard */
+    .keyboard-wrap {
+      width: 100%;
+    }
+
+    .keyboard {
+      --white-count: 15;
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(var(--white-count), minmax(0, 1fr));
+      width: 100%;
+      height: clamp(180px, 32vh, 250px);
+      min-height: 180px;
+      overflow: hidden;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      background: #0f172a;
+      touch-action: manipulation;
+      padding: 3px;
+    }
+
+    .key {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 800;
+      user-select: none;
+      transition: transform 0.06s, background 0.12s, color 0.12s, box-shadow 0.12s;
+    }
+
+    .key.white {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 70%, #e2e8f0 100%);
+      border-right: 1px solid #cbd5e1;
+      border-radius: 0 0 6px 6px;
+      color: #1e293b;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .key.white:last-of-type {
+      border-right: 0;
+    }
+
+    .key.black {
+      position: absolute;
+      top: 0;
+      z-index: 3;
+      width: calc((100% / var(--white-count)) * 0.62);
+      height: 58%;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+      color: #f8fafc;
+      border: 1px solid #020617;
+      border-radius: 0 0 6px 6px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 6px;
+      font-size: 10px;
+    }
+
+    /* Key active press - Violet */
+    .key.active-press {
+      background: var(--midi) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 16px rgba(147, 51, 234, 0.7);
+      transform: translateY(2px) !important;
+    }
+
+    .key.black.active-press {
+      transform: translateX(-50%) translateY(2px) !important;
+    }
+
+    /* Key evaluation feedback - Green for correct note, Red for wrong note */
+    .key.good {
+      background: var(--good) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(22, 163, 74, 0.6);
+    }
+
+    .key.bad {
+      background: var(--bad) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+    }
+
+    @media (max-width: 640px) {
+      .scoreboard { grid-template-columns: repeat(2, 1fr); }
+      .controls { grid-template-columns: 1fr 1fr; }
+      .field:last-child { grid-column: 1 / -1; }
+      h1 { font-size: 16px; }
+      .subtitle { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">𝄞</div>
+        <div>
+          <h1 id="titleText">Apprendre à lire les notes</h1>
+          <p class="subtitle" id="subtitleText">Exercices de solfège sur portée avec clavier virtuel et piano Casio USB / MIDI</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Automatic MIDI device pill -->
+        <div class="midi-status-pill" id="midiStatusIndicator" style="display: none;">
+          <span class="dot"></span>
+          <span id="midiDeviceName">Casio USB</span>
+        </div>
+
+        <div class="seg" id="langSeg">
+          <button type="button" data-lang="fr" class="on">Do Ré Mi</button>
+          <button type="button" data-lang="en">C D E</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="card">
+      <div class="controls">
+        <div class="field">
+          <label id="lblClef">Clé de Musique</label>
+          <div class="seg" id="clefSeg">
+            <button type="button" data-clef="treble" class="on">𝄞 Sol</button>
+            <button type="button" data-clef="bass">𝄢 Fa</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="lblDifficulty">Difficulté</label>
+          <select id="difficultySel">
+            <option value="0">Facile (Sur la portée)</option>
+            <option value="1" selected>Moyen (+ Lignes supplémentaires)</option>
+            <option value="2">Difficile (Étendue de 2 octaves)</option>
+            <option value="3">Partie inférieure (Graves)</option>
+            <option value="4">Partie supérieure (Aigus)</option>
+          </select>
+        </div>
+
+        <div class="field" style="display: flex; flex-direction: row; gap: 6px;">
+          <button type="button" class="btn" id="btnReset" style="flex:1;">Réinitialiser</button>
+          <button type="button" class="btn primary" id="btnNewBatch" style="flex:2;">Nouvelle Série (10)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Staff Stage -->
+    <div class="stage card">
+      <svg id="staffSvg" viewBox="0 0 1000 220" role="img" aria-label="Portée musicale"></svg>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="stat-box">
+        <div class="stat-icon">🎯</div>
+        <div>
+          <div class="stat-val" id="statBatch">1 / 10</div>
+          <div class="stat-lbl" id="lblStatBatch">Série Active</div>
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-icon">📊</div>
+        <div>
+          <div class="stat-val" id="statAccuracy">100% (0/0)</div>
+          <div class="stat-lbl" id="lblStatAccuracy">Précision</div>
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-icon">🔥</div>
+        <div>
+          <div class="stat-val" id="statStreak">0</div>
+          <div class="stat-lbl" id="lblStatStreak">Série en cours</div>
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-icon">🏆</div>
+        <div>
+          <div class="stat-val" id="statBest">0</div>
+          <div class="stat-lbl" id="lblStatBest">Record</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback Pill -->
+    <div class="feedback" id="feedbackContainer"></div>
+
+    <!-- Piano Keyboard -->
+    <div class="keyboard-wrap card">
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // Constants & Layout Config
+      const SVG_W = 1000;
+      const SVG_H = 220;
+      const LINE_GAP = 16;
+      const STEP = LINE_GAP / 2;
+      const BOTTOM_Y = 148;
+      const LINE_X0 = 85;
+      const LINE_X1 = 945;
+      const NOTE_X0 = 220;
+      const NOTE_GAP = 68;
+      const NOTE_RX = 10.5;
+      const NOTE_RY = 7.5;
+      const BATCH_SIZE = 10;
+
+      const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
+      const NAMES = {
+        fr: ["Do", "Ré", "Mi", "Fa", "Sol", "La", "Si"],
+        en: ["C", "D", "E", "F", "G", "A", "B"]
+      };
+      const CHROMATIC = {
+        fr: ["Do", "Do#", "Ré", "Ré#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"],
+        en: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+      };
+
+      const BASE = { treble: 2, bass: 4 };
+      const BASE_OCTAVE = { treble: 4, bass: 2 };
+      const KEYBOARD_START = { treble: 4, bass: 2 };
+      const CLEF_LABEL = { treble: "𝄞", bass: "𝄢" };
+
+      const RANGES = {
+        treble: { 0: [0, 8], 1: [-2, 10], 2: [-2, 12], 3: [0, 4], 4: [4, 8] },
+        bass: { 0: [0, 8], 1: [-2, 10], 2: [-4, 10], 3: [0, 4], 4: [4, 8] }
+      };
+
+      const I18N = {
+        fr: {
+          title: "Apprendre à lire les notes",
+          subtitle: "Exercices de solfège sur portée avec clavier virtuel et piano Casio USB / MIDI",
+          correct: "Bravo ! C'est la bonne note.",
+          wrong: "Erreur ! C'était ",
+          batchDone: "Série terminée ! Cliquez sur Nouvelle Série."
+        },
+        en: {
+          title: "Learn Note Reading",
+          subtitle: "Sight reading exercises on staff with virtual keyboard & Casio USB / MIDI piano",
+          correct: "Correct! That is the right note.",
+          wrong: "Incorrect! It was ",
+          batchDone: "Batch complete! Click New Series."
+        }
+      };
+
+      // State
+      const state = {
+        clef: "treble",
+        lang: "fr",
+        difficulty: "1",
+        batch: [],
+        index: 0,
+        locked: false,
+        ok: 0,
+        total: 0,
+        streak: 0,
+        best: 0,
+        advanceTimer: null,
+
+        // Web MIDI
+        midiAccess: null
+      };
+
+      // DOM Elements
+      const staffSvg = document.getElementById("staffSvg");
+      const keyboardEl = document.getElementById("keyboard");
+      const feedbackContainer = document.getElementById("feedbackContainer");
+      const clefSeg = document.getElementById("clefSeg");
+      const langSeg = document.getElementById("langSeg");
+      const difficultySel = document.getElementById("difficultySel");
+      const btnReset = document.getElementById("btnReset");
+      const btnNewBatch = document.getElementById("btnNewBatch");
+
+      const midiStatusIndicator = document.getElementById("midiStatusIndicator");
+      const midiDeviceName = document.getElementById("midiDeviceName");
+
+      const statBatch = document.getElementById("statBatch");
+      const statAccuracy = document.getElementById("statAccuracy");
+      const statStreak = document.getElementById("statStreak");
+      const statBest = document.getElementById("statBest");
+
+      const NS = "http://www.w3.org/2000/svg";
+
+      function el(tag, attrs) {
+        const node = document.createElementNS(NS, tag);
+        if (attrs) {
+          Object.keys(attrs).forEach((key) => node.setAttribute(key, attrs[key]));
+        }
+        return node;
+      }
+
+      function mod(n, size) {
+        return ((n % size) + size) % size;
+      }
+
+      function midiFor(nameIndex, octave) {
+        return 12 * (octave + 1) + SEMITONES[nameIndex];
+      }
+
+      function noteInfoForPos(clef, pos) {
+        const absolute = BASE[clef] + pos;
+        const nameIndex = mod(absolute, 7);
+        const octave = BASE_OCTAVE[clef] + Math.floor(absolute / 7);
+        return {
+          pos,
+          nameIndex,
+          octave,
+          midi: midiFor(nameIndex, octave),
+          result: null
+        };
+      }
+
+      function pitchFromMidi(midi) {
+        return {
+          midi,
+          pitchClass: mod(midi, 12),
+          octave: Math.floor(midi / 12) - 1
+        };
+      }
+
+      function formatMidi(midi) {
+        const pitch = pitchFromMidi(midi);
+        return CHROMATIC[state.lang][pitch.pitchClass] + pitch.octave;
+      }
+
+      function formatOctaveAnchor(octave) {
+        return (state.lang === "fr" ? "Do" : "C") + octave;
+      }
+
+      // ==================== AUDIO SYNTH ====================
+      let audioCtx = null;
+      function getAudioCtx() {
+        if (!audioCtx) {
+          const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtxClass) {
+            audioCtx = new AudioCtxClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      window.addEventListener('pointerdown', getAudioCtx, { passive: true });
+      window.addEventListener('keydown', getAudioCtx, { passive: true });
+
+      function playMidiSound(midi, vel = 80) {
+        try {
+          const ctx = getAudioCtx();
+          if (!ctx) return;
+
+          const freq = 440 * Math.pow(2, (midi - 69) / 12);
+          const now = ctx.currentTime;
+
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(freq, now);
+
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(freq * 2, now);
+
+          const gainNorm = Math.min(1, Math.max(0.1, vel / 127));
+          const peakVol = 0.22 * gainNorm;
+
+          gain1.gain.setValueAtTime(0.001, now);
+          gain1.gain.linearRampToValueAtTime(peakVol, now + 0.02);
+          gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+
+          gain2.gain.setValueAtTime(0.001, now);
+          gain2.gain.linearRampToValueAtTime(peakVol * 0.3, now + 0.02);
+          gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+          osc1.connect(gain1); gain1.connect(ctx.destination);
+          osc2.connect(gain2); gain2.connect(ctx.destination);
+
+          osc1.start(now); osc2.start(now);
+          osc1.stop(now + 0.9); osc2.stop(now + 0.6);
+        } catch (e) {}
+      }
+
+      // ==================== AUTOMATIC WEB MIDI ====================
+
+      function initAutoWebMidi() {
+        if (!navigator.requestMIDIAccess) return;
+
+        const requestMidi = (sysex) => {
+          navigator.requestMIDIAccess({ sysex })
+            .then((access) => {
+              state.midiAccess = access;
+              access.onstatechange = () => scanDevices();
+              scanDevices();
+            })
+            .catch(() => {
+              if (sysex) requestMidi(false);
+            });
+        };
+
+        requestMidi(false);
+      }
+
+      function scanDevices() {
+        if (!state.midiAccess || !state.midiAccess.inputs) return;
+        const inputs = [];
+        try {
+          const raw = state.midiAccess.inputs;
+          if (typeof raw.values === 'function') {
+            const iter = raw.values();
+            let item = iter.next();
+            while (!item.done) {
+              if (item.value) inputs.push(item.value);
+              item = iter.next();
+            }
+          } else if (typeof raw.forEach === 'function') {
+            raw.forEach(i => i && inputs.push(i));
+          }
+        } catch (e) {}
+
+        inputs.forEach(inp => bindInputDevice(inp));
+
+        if (inputs.length > 0) {
+          const name = inputs[0].name || "Piano USB / MIDI";
+          if (midiDeviceName) midiDeviceName.textContent = name;
+          if (midiStatusIndicator) midiStatusIndicator.style.display = "inline-flex";
+        } else {
+          if (midiStatusIndicator) midiStatusIndicator.style.display = "none";
+        }
+      }
+
+      function bindInputDevice(device) {
+        if (!device) return;
+
+        const onMsg = (event) => {
+          if (!event || !event.data) return;
+          const [status, note, velocity = 64] = event.data;
+          const cmd = status & 0xf0;
+
+          if (cmd === 0x90 && velocity > 0) {
+            // Note ON
+            handleKeyPressStart(note, velocity);
+          } else if (cmd === 0x80 || (cmd === 0x90 && velocity === 0)) {
+            // Note OFF
+            handleKeyPressEnd(note);
+          }
+        };
+
+        try {
+          device.onmidimessage = onMsg;
+          if (typeof device.addEventListener === 'function') {
+            device.addEventListener('midimessage', onMsg);
+          }
+        } catch (e) {}
+      }
+
+      // ==================== KEY HIGHLIGHT & UNIFIED INPUT ====================
+
+      function clearKeyboardHighlights() {
+        keyboardEl.querySelectorAll(".key").forEach(k => {
+          k.classList.remove("good", "bad", "active-press");
+        });
+      }
+
+      function handleKeyPressStart(midi, velocity = 80) {
+        // Clear any previous red/green error highlights when user presses a new key!
+        clearKeyboardHighlights();
+
+        // Highlight active key in violet
+        const keyBtn = keyboardEl.querySelector(`.key[data-midi="${midi}"]`);
+        if (keyBtn) {
+          keyBtn.classList.add("active-press");
+        }
+
+        playMidiSound(midi, velocity);
+
+        if (!state.locked && state.index < state.batch.length) {
+          submitAnswer(midi);
+        }
+      }
+
+      function handleKeyPressEnd(midi) {
+        const keyBtn = keyboardEl.querySelector(`.key[data-midi="${midi}"]`);
+        if (keyBtn) {
+          keyBtn.classList.remove("active-press");
+        }
+      }
+
+      // ==================== STAFF DRAWING ====================
+
+      function clearSvg() {
+        while (staffSvg.firstChild) staffSvg.removeChild(staffSvg.firstChild);
+      }
+
+      function drawStaffLines() {
+        const bg = el("rect", { x: 0, y: 0, width: SVG_W, height: SVG_H, fill: "#f8fafc", rx: 12 });
+        staffSvg.appendChild(bg);
+
+        for (let i = 0; i < 5; i++) {
+          const y = BOTTOM_Y - i * LINE_GAP;
+          staffSvg.appendChild(el("line", {
+            x1: LINE_X0, y1: y, x2: LINE_X1, y2: y,
+            stroke: "var(--staff)", "stroke-width": 1.8, "stroke-linecap": "round"
+          }));
+        }
+
+        // End bar
+        staffSvg.appendChild(el("line", {
+          x1: LINE_X1, y1: BOTTOM_Y, x2: LINE_X1, y2: BOTTOM_Y - 4 * LINE_GAP,
+          stroke: "var(--staff)", "stroke-width": 2
+        }));
+
+        // Clef symbol
+        const clef = el("text", {
+          x: 100,
+          y: state.clef === "treble" ? BOTTOM_Y - 2 * STEP + 32 : BOTTOM_Y - 6 * STEP + 22,
+          "font-family": "'Bravura','Noto Music','Segoe UI Symbol','Apple Symbols',serif",
+          "font-size": state.clef === "treble" ? 106 : 94,
+          fill: "var(--staff)"
+        });
+        clef.textContent = CLEF_LABEL[state.clef];
+        staffSvg.appendChild(clef);
+
+        // Octave Anchors
+        const startOctave = KEYBOARD_START[state.clef];
+        for (let oct = startOctave; oct <= startOctave + 2; oct++) {
+          const pos = (oct - BASE_OCTAVE[state.clef]) * 7 - BASE[state.clef];
+          const y = BOTTOM_Y - pos * STEP;
+
+          staffSvg.appendChild(el("line", {
+            x1: 50, y1: y, x2: LINE_X0 - 10, y2: y,
+            stroke: "#0284c7", "stroke-width": 1.5, "stroke-dasharray": "3 3", opacity: 0.6
+          }));
+
+          const txt = el("text", {
+            x: 42, y: y + 4, "text-anchor": "end", "font-size": 13,
+            "font-weight": 800, fill: "#0369a1", "font-family": "sans-serif"
+          });
+          txt.textContent = formatOctaveAnchor(oct);
+          staffSvg.appendChild(txt);
+        }
+      }
+
+      function drawLedgers(pos, x, color) {
+        const drawL = (p) => {
+          const y = BOTTOM_Y - p * STEP;
+          staffSvg.appendChild(el("line", {
+            x1: x - 22, y1: y, x2: x + 22, y2: y,
+            stroke: color, "stroke-width": 1.8, "stroke-linecap": "round"
+          }));
+        };
+
+        if (pos < 0) {
+          for (let p = -2; p >= pos; p -= 2) drawL(p);
+        } else if (pos > 8) {
+          for (let p = 10; p <= pos; p += 2) drawL(p);
+        }
+      }
+
+      function drawNote(note, index) {
+        const x = NOTE_X0 + index * NOTE_GAP;
+        const y = BOTTOM_Y - note.pos * STEP;
+        const isCurrent = index === state.index && !state.locked && state.index < state.batch.length;
+        const isFuture = index > state.index && !note.result;
+
+        let color = isFuture ? "#94a3b8" : "var(--staff)";
+        if (note.result === 'good') color = "var(--good)";
+        if (note.result === 'bad') color = "var(--bad)";
+        if (isCurrent) color = "var(--accent)";
+
+        drawLedgers(note.pos, x, color);
+
+        if (isCurrent) {
+          staffSvg.appendChild(el("ellipse", {
+            cx: x, cy: y, rx: 26, ry: 22,
+            fill: "rgba(2, 132, 199, 0.15)", stroke: "#0284c7", "stroke-width": 2
+          }));
+        }
+
+        const stemUp = note.pos < 4;
+        staffSvg.appendChild(el("line", {
+          x1: stemUp ? x + NOTE_RX : x - NOTE_RX,
+          y1: stemUp ? y - 1 : y + 1,
+          x2: stemUp ? x + NOTE_RX : x - NOTE_RX,
+          y2: stemUp ? y - 42 : y + 42,
+          stroke: color, "stroke-width": 2.4, "stroke-linecap": "round"
+        }));
+
+        const head = el("ellipse", {
+          cx: x, cy: y, rx: NOTE_RX, ry: NOTE_RY,
+          fill: color, stroke: color, "stroke-width": 1,
+          transform: `rotate(-18 ${x} ${y})`
+        });
+
+        if (isCurrent) {
+          head.style.cursor = "pointer";
+          head.onclick = () => handleKeyPressStart(note.midi);
+        }
+        staffSvg.appendChild(head);
+
+        const lbl = el("text", {
+          x, y: BOTTOM_Y + 36, "text-anchor": "middle", "font-size": 11,
+          "font-weight": index === state.index ? "800" : "500",
+          fill: index === state.index ? "#0284c7" : "#64748b"
+        });
+        lbl.textContent = String(index + 1);
+        staffSvg.appendChild(lbl);
+      }
+
+      function renderStaff() {
+        clearSvg();
+        drawStaffLines();
+        state.batch.forEach(drawNote);
+      }
+
+      // ==================== KEYBOARD CREATION ====================
+
+      function buildKeyboard() {
+        const startOctave = KEYBOARD_START[state.clef];
+        const whiteKeys = [];
+
+        for (let i = 0; i < 15; i++) {
+          const nameIndex = i % 7;
+          const octave = startOctave + Math.floor(i / 7);
+          whiteKeys.push({ nameIndex, octave, midi: midiFor(nameIndex, octave) });
+        }
+
+        keyboardEl.innerHTML = "";
+        keyboardEl.style.setProperty("--white-count", String(whiteKeys.length));
+
+        whiteKeys.forEach((key) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "key white";
+          btn.dataset.midi = String(key.midi);
+          btn.textContent = `${NAMES[state.lang][key.nameIndex]}${key.octave}`;
+
+          btn.onpointerdown = (e) => {
+            e.preventDefault();
+            handleKeyPressStart(key.midi);
+          };
+          btn.onpointerup = (e) => {
+            e.preventDefault();
+            handleKeyPressEnd(key.midi);
+          };
+          btn.onpointerleave = (e) => {
+            e.preventDefault();
+            handleKeyPressEnd(key.midi);
+          };
+          keyboardEl.appendChild(btn);
+        });
+
+        whiteKeys.slice(0, -1).forEach((key, idx) => {
+          const next = whiteKeys[idx + 1];
+          if (next.midi - key.midi === 2) {
+            const midi = key.midi + 1;
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "key black";
+            btn.dataset.midi = String(midi);
+            btn.style.left = `${((idx + 1) / whiteKeys.length) * 100}%`;
+            btn.textContent = CHROMATIC[state.lang][mod(midi, 12)];
+
+            btn.onpointerdown = (e) => {
+              e.preventDefault();
+              handleKeyPressStart(midi);
+            };
+            btn.onpointerup = (e) => {
+              e.preventDefault();
+              handleKeyPressEnd(midi);
+            };
+            btn.onpointerleave = (e) => {
+              e.preventDefault();
+              handleKeyPressEnd(midi);
+            };
+            keyboardEl.appendChild(btn);
+          }
+        });
+      }
+
+      // ==================== GAME EVALUATION LOGIC ====================
+
+      function submitAnswer(pickedMidi) {
+        if (state.locked || state.index >= state.batch.length) return;
+
+        const currentNote = state.batch[state.index];
+        state.locked = true;
+
+        const isGood = pickedMidi === currentNote.midi;
+        currentNote.result = isGood ? 'good' : 'bad';
+        state.total++;
+
+        if (isGood) {
+          state.ok++;
+          state.streak++;
+          state.best = Math.max(state.best, state.streak);
+          feedbackContainer.innerHTML = `<div class="feedback-pill good">✓ ${I18N[state.lang].correct} (${formatMidi(pickedMidi)})</div>`;
+
+          // Correct answer: Key returns to base color upon release (no red/green added)
+        } else {
+          state.streak = 0;
+          feedbackContainer.innerHTML = `<div class="feedback-pill bad">✕ ${I18N[state.lang].wrong} ${formatMidi(currentNote.midi)}</div>`;
+
+          // Incorrect answer:
+          // 1. Played key (wrong) becomes RED
+          const wrongKey = keyboardEl.querySelector(`.key[data-midi="${pickedMidi}"]`);
+          if (wrongKey) wrongKey.classList.add("bad");
+
+          // 2. Target key (correct) becomes GREEN
+          const correctKey = keyboardEl.querySelector(`.key[data-midi="${currentNote.midi}"]`);
+          if (correctKey) correctKey.classList.add("good");
+
+          // Both RED and GREEN stay on keys until user plays another key or restarts!
+        }
+
+        renderStaff();
+        updateScoreboard();
+
+        const delay = isGood ? 400 : 1000;
+        state.advanceTimer = setTimeout(() => {
+          state.locked = false;
+          state.index++;
+
+          if (state.index >= BATCH_SIZE) {
+            feedbackContainer.innerHTML = `<div class="feedback-pill info">🎉 ${I18N[state.lang].batchDone}</div>`;
+          } else {
+            feedbackContainer.innerHTML = "";
+          }
+
+          renderStaff();
+          updateScoreboard();
+        }, delay);
+      }
+
+      function updateScoreboard() {
+        const curStep = Math.min(state.index + 1, BATCH_SIZE);
+        statBatch.textContent = `${curStep} / ${BATCH_SIZE}`;
+
+        const acc = state.total > 0 ? Math.round((state.ok / state.total) * 100) : 100;
+        statAccuracy.textContent = `${acc}% (${state.ok}/${state.total})`;
+
+        statStreak.textContent = String(state.streak);
+        statBest.textContent = String(state.best);
+      }
+
+      function newBatch() {
+        if (state.advanceTimer) clearTimeout(state.advanceTimer);
+        clearKeyboardHighlights();
+
+        const [lo, hi] = RANGES[state.clef][state.difficulty];
+        const notes = [];
+        let prevPos = null;
+
+        for (let i = 0; i < BATCH_SIZE; i++) {
+          let pos = lo + Math.floor(Math.random() * (hi - lo + 1));
+          let tries = 0;
+          while (pos === prevPos && tries < 8) {
+            pos = lo + Math.floor(Math.random() * (hi - lo + 1));
+            tries++;
+          }
+          prevPos = pos;
+          notes.push(noteInfoForPos(state.clef, pos));
+        }
+
+        state.batch = notes;
+        state.index = 0;
+        state.locked = false;
+        feedbackContainer.innerHTML = "";
+
+        renderStaff();
+        updateScoreboard();
+      }
+
+      // ==================== PHYSICAL COMPUTER KEYBOARD SHORTCUTS ====================
+
+      window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.repeat) return;
+
+        const KEY_TO_OFFSET = {
+          'a': 0, 'w': 1, 's': 2, 'e': 3, 'd': 4, 'f': 5, 't': 6, 'g': 7, 'y': 8, 'h': 9, 'u': 10, 'j': 11, 'k': 12,
+          'c': 0, 'r': 2, 'm': 4, 'b': 11
+        };
+
+        const key = e.key.toLowerCase();
+        if (key in KEY_TO_OFFSET) {
+          const offset = KEY_TO_OFFSET[key];
+          const baseMidi = state.clef === 'treble' ? 60 : 48;
+          const midi = baseMidi + offset;
+          handleKeyPressStart(midi);
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        const KEY_TO_OFFSET = {
+          'a': 0, 'w': 1, 's': 2, 'e': 3, 'd': 4, 'f': 5, 't': 6, 'g': 7, 'y': 8, 'h': 9, 'u': 10, 'j': 11, 'k': 12,
+          'c': 0, 'r': 2, 'm': 4, 'b': 11
+        };
+
+        const key = e.key.toLowerCase();
+        if (key in KEY_TO_OFFSET) {
+          const offset = KEY_TO_OFFSET[key];
+          const baseMidi = state.clef === 'treble' ? 60 : 48;
+          const midi = baseMidi + offset;
+          handleKeyPressEnd(midi);
+        }
+      });
+
+      // ==================== UI CONTROL LISTENERS ====================
+
+      clefSeg.querySelectorAll("button").forEach(b => {
+        b.onclick = () => {
+          clefSeg.querySelectorAll("button").forEach(node => node.classList.remove("on"));
+          b.classList.add("on");
+          state.clef = b.dataset.clef;
+          buildKeyboard();
+          newBatch();
+        };
+      });
+
+      langSeg.querySelectorAll("button").forEach(b => {
+        b.onclick = () => {
+          langSeg.querySelectorAll("button").forEach(node => node.classList.remove("on"));
+          b.classList.add("on");
+          state.lang = b.dataset.lang;
+          document.getElementById("titleText").textContent = I18N[state.lang].title;
+          document.getElementById("subtitleText").textContent = I18N[state.lang].subtitle;
+          buildKeyboard();
+          renderStaff();
+          updateScoreboard();
+        };
+      });
+
+      difficultySel.onchange = () => {
+        state.difficulty = difficultySel.value;
+        newBatch();
+      };
+
+      btnReset.onclick = () => {
+        state.ok = 0; state.total = 0; state.streak = 0; state.best = 0;
+        newBatch();
+      };
+
+      btnNewBatch.onclick = newBatch;
+
+      // Initialize Application & Auto MIDI
+      buildKeyboard();
+      newBatch();
+      initAutoWebMidi();
+
+    })();
+  </script>
+</body>
+</html>
